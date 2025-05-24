@@ -1,96 +1,109 @@
-# 图片上传应用
+# 图片上传服务
 
-这是一个基于 Cloudflare Workers 和 R2 存储的图片上传应用。支持拖放上传、点击选择和剪贴板粘贴上传功能。
+基于 Cloudflare Pages 和 R2 存储的图片上传服务。支持拖放上传、点击上传和粘贴上传，并提供即时的图片预览和 URL 分享功能。
 
 ## 功能特点
 
-- 支持多种上传方式：
-  - 点击上传按钮选择文件
-  - 拖放文件上传
-  - 剪贴板粘贴上传（Ctrl+V）
-- 实时预览上传的图片
-- 使用 Cloudflare R2 存储图片
-- 美观的用户界面
-
-## 部署步骤
-
-### 1. 准备工作
-
-1. 安装 Node.js（建议 16.x 或更高版本）
-2. 安装 Wrangler CLI：
-   ```bash
-   npm install -g wrangler
-   ```
-3. 登录到 Cloudflare：
-   ```bash
-   wrangler login
-   ```
-
-### 2. 创建 R2 存储桶
-
-1. 在 Cloudflare 控制台创建 R2 存储桶：
-   - 进入 Cloudflare 控制台
-   - 选择 "R2" 
-   - 点击 "Create bucket"
-   - 创建名为 "image-uploads" 的存储桶
-   - 如果需要测试环境，创建名为 "image-uploads-preview" 的存储桶
-
-### 3. 配置项目
-
-1. 克隆项目并安装依赖：
-   ```bash
-   git clone <项目地址>
-   cd image-uploader
-   npm install
-   ```
-
-2. 检查 `wrangler.toml` 配置：
-   - 确保 `bucket_name` 和 `preview_bucket_name` 与你创建的 R2 存储桶名称一致
-
-### 4. 部署
-
-1. 构建并部署项目：
-   ```bash
-   npm run build
-   wrangler deploy
-   ```
-
-2. 部署完成后，Wrangler 会输出应用的 URL，类似：
-   ```
-   https://image-uploader.<your-subdomain>.workers.dev
-   ```
-
-### 5. 使用自定义域名（可选）
-
-1. 在 Cloudflare 控制台中：
-   - 进入 "Workers & Pages"
-   - 选择你的 Worker
-   - 点击 "Triggers" 标签
-   - 在 "Custom Domains" 部分添加你的域名
-
-## 本地开发
-
-1. 启动开发服务器：
-   ```bash
-   npm run dev
-   ```
-
-2. 访问 `http://localhost:8787` 进行测试
-
-## 注意事项
-
-- 确保你的 Cloudflare 账户已启用 R2 存储服务
-- R2 存储服务是付费服务，请查看 Cloudflare 的定价页面了解详情
-- 建议设置适当的 CORS 策略和访问控制
-- 考虑添加文件大小限制和文件类型验证
+- 📤 多种上传方式
+  - 拖放上传
+  - 点击选择文件
+  - Ctrl+V 粘贴上传
+- 🖼️ 即时图片预览
+- 📋 便捷的 URL 复制
+  - 支持普通 URL 复制
+  - 支持 Markdown 格式 URL 复制
+- 🔒 安全的文件存储
+  - 使用 Cloudflare R2 存储
+  - 自动生成唯一文件名
+- 💫 现代化 UI 设计
+  - 响应式布局
+  - 优雅的动画效果
+  - 清晰的操作反馈
 
 ## 技术栈
 
-- Frontend: React + TailwindCSS
-- Backend: Cloudflare Workers
-- Storage: Cloudflare R2
-- Build Tool: Vite
+- 前端
+  - React
+  - TypeScript
+  - TailwindCSS
+  - Vite
+- 后端
+  - Cloudflare Pages Functions
+  - Cloudflare R2 存储
+
+## 部署指南
+
+### 前提条件
+
+- Cloudflare 账号
+- Node.js 16+ 和 npm
+
+### 步骤 1: 配置 R2 存储
+
+1. 登录 Cloudflare 控制台
+2. 创建 R2 存储桶
+   - 进入 R2 部分
+   - 创建新的存储桶（例如：`image-uploads`）
+   - 启用公共访问
+   - 记录生成的公共域名
+
+### 步骤 2: 配置 Pages 项目
+
+1. Fork 或克隆本仓库
+2. 在 Cloudflare Pages 中创建新项目
+3. 连接到您的代码仓库
+4. 配置构建设置：
+   - 构建命令：`npm run build`
+   - 输出目录：`dist`
+5. 配置环境变量：
+   - `R2_PUBLIC_DOMAIN`: R2 存储桶的公共域名
+
+### 步骤 3: 绑定 R2 存储桶
+
+1. 在 Pages 项目设置中
+2. 找到 "Functions" 部分
+3. 添加 R2 存储桶绑定：
+   - 绑定名称：`BUCKET`
+   - 选择之前创建的存储桶
+
+### 本地开发
+
+```bash
+# 安装依赖
+npm install
+
+# 启动开发服务器
+npm run dev
+
+# 构建生产版本
+npm run build
+
+# 部署到 Cloudflare Pages
+npx wrangler pages deploy dist
+```
+
+## 生产环境建议
+
+1. 配置自定义域名
+2. 启用 Cloudflare Access 控制访问权限
+3. 配置 Cloudflare 缓存规则
+4. 设置上传文件大小限制
+5. 实施更严格的文件类型验证
 
 ## 许可证
 
-MIT 
+MIT
+
+## 贡献指南
+
+欢迎提交 Issue 和 Pull Request！
+
+1. Fork 本仓库
+2. 创建您的特性分支
+3. 提交您的改动
+4. 推送到您的分支
+5. 创建 Pull Request
+
+## 联系方式
+
+如有问题或建议，请提交 Issue。 

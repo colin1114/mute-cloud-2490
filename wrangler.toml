@@ -5,4 +5,28 @@ compatibility_date = "2024-01-01"
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "image-uploads"
-preview_bucket_name = "image-uploads-preview" 
+
+[site]
+bucket = "./dist"
+
+[build]
+command = "npm run build"
+watch_dir = "src"
+
+[build.upload]
+format = "service-worker"
+
+[env.production]
+name = "image-uploader"
+route = "mute-cloud-2490.colin1112.workers.dev/*"
+
+[env.production.site]
+bucket = "./dist"
+
+[pages]
+build_output_directory = "dist"
+
+# 确保 Worker 有权限访问 R2
+[[migrations]]
+tag = "v1"
+new_classes = ["R2"] 

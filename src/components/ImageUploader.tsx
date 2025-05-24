@@ -1,18 +1,41 @@
 import React, { useCallback, useState } from 'react';
 
+interface UploadedImage {
+  url: string;
+  timestamp: number;
+}
+
 const ImageUploader: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      // 可以添加一个临时提示，但这里我们保持简单
+      console.log('Copied to clipboard');
+    });
+  };
+
+  const getMarkdownUrl = (url: string) => {
+    return `![](${url})`;
+  };
 
   const handleUpload = async (files: FileList | null) => {
     if (!files) return;
     
     setIsUploading(true);
+    setError(null);
+
     try {
       for (const file of Array.from(files)) {
-        if (!file.type.startsWith('image/')) continue;
+        if (!file.type.startsWith('image/')) {
+          setError('只能上传图片文件');
+          continue;
+        }
         
+        console.log('开始上传文件:', file.name);
         const formData = new FormData();
         formData.append('image', file);
         
@@ -21,13 +44,17 @@ const ImageUploader: React.FC = () => {
           body: formData,
         });
         
-        if (response.ok) {
-          const { url } = await response.json();
-          setUploadedImages(prev => [...prev, url]);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`上传失败: ${errorText}`);
         }
+
+        const data = await response.json();
+        setUploadedImages(prev => [...prev, { url: data.url, timestamp: Date.now() }]);
       }
     } catch (error) {
-      console.error('Upload failed:', error);
+      console.error('上传错误:', error);
+      setError(error instanceof Error ? error.message : '上传失败，请重试');
     } finally {
       setIsUploading(false);
     }
@@ -85,6 +112,12 @@ const ImageUploader: React.FC = () => {
         </p>
       </div>
 
+      {error && (
+        <div className="mt-4 text-center text-red-500">
+          {error}
+        </div>
+      )}
+
       {isUploading && (
         <div className="mt-4 text-center text-blue-500">
           正在上传...
@@ -92,14 +125,50 @@ const ImageUploader: React.FC = () => {
       )}
 
       {uploadedImages.length > 0 && (
-        <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {uploadedImages.map((url, index) => (
-            <div key={index} className="relative aspect-square">
-              <img
-                src={url}
-                alt={`Uploaded ${index + 1}`}
-                className="w-full h-full object-cover rounded-lg"
-              />
+        <div className="mt-6 space-y-4">
+          {uploadedImages.map((image, index) => (
+            <div key={image.timestamp} className="bg-gray-50 p-4 rounded-lg">
+              <div className="relative aspect-square w-full max-w-md mx-auto mb-4">
+                <img
+                  src={image.url}
+                  alt={`Uploaded ${index + 1}`}
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                {/* 普通 URL */}
+                <div className="flex items-center gap-2 bg-white p-2 rounded border">
+                  <input
+                    type="text"
+                    readOnly
+                    value={image.url}
+                    className="flex-1 text-sm text-gray-600 bg-transparent outline-none"
+                  />
+                  <button
+                    onClick={() => handleCopy(image.url)}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+                  >
+                    复制
+                  </button>
+                </div>
+                
+                {/* Markdown 格式 URL */}
+                <div className="flex items-center gap-2 bg-white p-2 rounded border">
+                  <input
+                    type="text"
+                    readOnly
+                    value={getMarkdownUrl(image.url)}
+                    className="flex-1 text-sm text-gray-600 bg-transparent outline-none"
+                  />
+                  <button
+                    onClick={() => handleCopy(getMarkdownUrl(image.url))}
+                    className="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors"
+                  >
+                    复制 MD
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>

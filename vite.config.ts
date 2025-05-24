@@ -5,8 +5,11 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
+    emptyOutDir: true,
     rollupOptions: {
-      input: 'src/index.tsx',
-    },
+      input: {
+        main: './index.html'
+      }
+    }
   },
 }); 
