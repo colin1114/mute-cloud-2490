@@ -1,5 +1,10 @@
 import React, { useCallback, useState } from 'react';
 
+// 配置常量
+const CONFIG = {
+  UPLOAD_API_PATH: '/api/upload'
+} as const;
+
 interface UploadedImage {
   url: string;
   timestamp: number;
@@ -39,7 +44,7 @@ const ImageUploader: React.FC = () => {
         const formData = new FormData();
         formData.append('image', file);
         
-        const response = await fetch('/api/upload', {
+        const response = await fetch(CONFIG.UPLOAD_API_PATH, {
           method: 'POST',
           body: formData,
         });
