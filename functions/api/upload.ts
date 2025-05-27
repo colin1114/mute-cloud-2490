@@ -1,20 +1,20 @@
-import { PagesFunction } from '@cloudflare/workers-types';
+import { PagesFunction, R2Bucket } from '@cloudflare/workers-types';
 
 interface Env {
-  BUCKET: {
-    put: (key: string, value: ReadableStream, options?: { httpMetadata?: { contentType: string } }) => Promise<void>;
-  };
+  BUCKET: R2Bucket;
   R2_PUBLIC_DOMAIN: string;
 }
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   console.log('Function triggered. Environment variables:', JSON.stringify(context.env));
 
-  if (typeof context.env.BUCKET === 'undefined') {
+  if (!context.env.BUCKET || typeof context.env.BUCKET.put !== 'function') {
     return Response.json(
       {
-        message: "Upload failed because context.env.BUCKET is undefined. Current environment variables:",
+        message: "Upload failed because R2 bucket binding is not properly configured. Current environment variables:",
         environment: context.env,
+        bucketType: typeof context.env.BUCKET,
+        hasPutMethod: context.env.BUCKET ? typeof context.env.BUCKET.put === 'function' : false
       },
       {
         status: 500,
@@ -25,9 +25,9 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
   try {
     const formData = await context.request.formData();
-    const image = formData.get('image');
+    const image = formData.get('image') as File | null;
     
-    if (!image || !(image instanceof File)) {
+    if (!image) {
       return new Response('No image provided', { status: 400 });
     }
 
@@ -43,7 +43,8 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
     const key = `${timestamp}-${randomString}.${extension}`;
 
     // 上传到 R2
-    await context.env.BUCKET.put(key, image.stream(), {
+    const buffer = await image.arrayBuffer();
+    await context.env.BUCKET.put(key, buffer, {
       httpMetadata: {
         contentType: image.type,
       },
