@@ -1,7 +1,9 @@
 import { getAssetFromKV } from '@cloudflare/kv-asset-handler';
+import { R2Bucket } from '@cloudflare/workers-types';
 
 interface Env {
-  BUCKET: R2Bucket;
+  BUCKET_BUCKET: R2Bucket;
+  R2_PUBLIC_DOMAIN: string;
 }
 
 export default {
@@ -39,17 +41,21 @@ export default {
           }
 
           const buffer = await image.arrayBuffer();
-          const key = `${Date.now()}-${image.name}`;
+          const timestamp = Date.now();
+          const randomString = Math.random().toString(36).substring(2, 15);
+          const extension = image.name.split('.').pop() || 'jpg';
+          const key = `${timestamp}-${randomString}.${extension}`;
 
           console.log('开始上传到 R2:', key);
-          await env.BUCKET.put(key, buffer, {
+          await env.BUCKET_BUCKET.put(key, buffer, {
             httpMetadata: {
               contentType: image.type,
             },
           });
           console.log('R2 上传完成');
 
-          const imageUrl = `${url.origin}/image/${key}`;
+          // 使用 R2 公共域名构建 URL
+          const imageUrl = `https://${env.R2_PUBLIC_DOMAIN}/${key}`;
           console.log('生成的图片 URL:', imageUrl);
 
           return new Response(JSON.stringify({ url: imageUrl }), {
@@ -78,7 +84,7 @@ export default {
         try {
           const key = url.pathname.replace('/image/', '');
           console.log('获取图片:', key);
-          const object = await env.BUCKET.get(key);
+          const object = await env.BUCKET_BUCKET.get(key);
 
           if (!object) {
             console.error('图片未找到:', key);
