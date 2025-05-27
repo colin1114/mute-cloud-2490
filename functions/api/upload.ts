@@ -1,20 +1,20 @@
 import { PagesFunction, R2Bucket } from '@cloudflare/workers-types';
 
 interface Env {
-  BUCKET: R2Bucket;
+  BUCKET_BUCKET: R2Bucket;
   R2_PUBLIC_DOMAIN: string;
 }
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   console.log('Function triggered. Environment variables:', JSON.stringify(context.env));
 
-  if (!context.env.BUCKET || typeof context.env.BUCKET.put !== 'function') {
+  if (!context.env.BUCKET_BUCKET || typeof context.env.BUCKET_BUCKET.put !== 'function') {
     return Response.json(
       {
         message: "Upload failed because R2 bucket binding is not properly configured. Current environment variables:",
         environment: context.env,
-        bucketType: typeof context.env.BUCKET,
-        hasPutMethod: context.env.BUCKET ? typeof context.env.BUCKET.put === 'function' : false
+        bucketType: typeof context.env.BUCKET_BUCKET,
+        hasPutMethod: context.env.BUCKET_BUCKET ? typeof context.env.BUCKET_BUCKET.put === 'function' : false
       },
       {
         status: 500,
@@ -44,7 +44,7 @@ export const onRequestPost: PagesFunction<Env> = async (context) => {
 
     // 上传到 R2
     const buffer = await image.arrayBuffer();
-    await context.env.BUCKET.put(key, buffer, {
+    await context.env.BUCKET_BUCKET.put(key, buffer, {
       httpMetadata: {
         contentType: image.type,
       },
