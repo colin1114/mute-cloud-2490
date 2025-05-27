@@ -9,6 +9,20 @@ interface Env {
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
   console.log('Function triggered. Environment variables:', JSON.stringify(context.env));
+
+  if (typeof context.env.BUCKET === 'undefined') {
+    return Response.json(
+      {
+        message: "Upload failed because context.env.BUCKET is undefined. Current environment variables:",
+        environment: context.env,
+      },
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
+  }
+
   try {
     const formData = await context.request.formData();
     const image = formData.get('image');
