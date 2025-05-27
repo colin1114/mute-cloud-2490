@@ -45,8 +45,13 @@ const ImageUploader: React.FC = () => {
         });
         
         if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`上传失败: ${errorText}`);
+          const errorData = await response.json().catch(() => null);
+          if (errorData && errorData.environment) {
+            throw new Error(`上传失败: 环境变量信息 - ${JSON.stringify(errorData.environment)}`);
+          } else {
+            const errorText = await response.text();
+            throw new Error(`上传失败: ${errorText}`);
+          }
         }
 
         const data = await response.json();
