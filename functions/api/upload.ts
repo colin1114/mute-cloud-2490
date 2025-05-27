@@ -8,6 +8,7 @@ interface Env {
 }
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {
+  console.log('Function triggered. Environment variables:', JSON.stringify(context.env));
   try {
     const formData = await context.request.formData();
     const image = formData.get('image');
