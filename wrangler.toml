@@ -2,10 +2,6 @@ name = "image-uploader"
 main = "src/worker.ts"
 compatibility_date = "2024-01-01"
 
-[[r2_buckets]]
-binding = "BUCKET"
-bucket_name = "image-uploads"
-
 [site]
 bucket = "./dist"
 
@@ -15,13 +11,6 @@ watch_dir = "src"
 
 [build.upload]
 format = "service-worker"
-
-[env.production]
-name = "image-uploader"
-route = "mute-cloud-2490.colin1112.workers.dev/*"
-
-[env.production.site]
-bucket = "./dist"
 
 [pages]
 build_output_directory = "dist"
